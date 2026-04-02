@@ -1,3 +1,4 @@
 <Solution>
-  <Project Path="K4U2/K4U2.csproj" />
+  <Project Path="Content API/Content API.csproj" />
+  <Project Path="LLM Proxy API/LLM Proxy API.csproj" />
 </Solution>
