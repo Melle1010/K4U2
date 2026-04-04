@@ -14,6 +14,11 @@ builder.Services.AddScoped<IOllamaApiClient>(sp =>
     return new OllamaApiClient(httpClient);
 });
 
+builder.Services.AddHttpClient("ContentApiClient", client =>
+{
+    client.BaseAddress = new Uri("http://localhost:5024/");
+});
+
 builder.Services.AddControllers();
 
 builder.Services.AddSwaggerGen();

@@ -6,10 +6,12 @@ using OllamaSharp;
 public class AiController : ControllerBase
 {
     private readonly IOllamaApiClient _ollama;
+    private readonly IHttpClientFactory _httpClientFactory;
 
-    public AiController(IOllamaApiClient ollama)
+    public AiController(IOllamaApiClient ollama, IHttpClientFactory httpClientFactory)
     {
         _ollama = ollama;
+        _httpClientFactory = httpClientFactory;
     }
 
     [HttpPost("ask")]
@@ -26,5 +28,35 @@ public class AiController : ControllerBase
 
         return Ok(fullResponse);
        
+    }
+
+    [HttpPost("ask-and-save")]
+    public async Task<IActionResult> AskAndSave([FromBody] string prompt)
+    {
+        _ollama.SelectedModel = "gemma3:4b";
+        string fullResponse = "";
+
+        await foreach (var stream in _ollama.GenerateAsync(prompt))
+        {
+            fullResponse += stream.Response;
+        }
+
+        var client = _httpClientFactory.CreateClient("ContentApiClient");
+
+        var contentRequest = new { Text = fullResponse };
+
+        var response = await client.PostAsJsonAsync("api/messages", contentRequest);
+
+        if (response.IsSuccessStatusCode)
+        {
+            var savedMessage = await response.Content.ReadFromJsonAsync<object>();
+            return Ok(new
+            {
+                Status = "Saved to Content API",
+                Data = savedMessage
+            });
+        }
+
+        return StatusCode((int)response.StatusCode, "AI generated a response, but Content API rejected it.");
     }
 }
