@@ -29,6 +29,23 @@ namespace Content_API.Controllers{
             return Ok(message);
         }
 
+        [HttpPut("{id}")]
+        public async Task<IActionResult> UpdateMessage(int id, UpdateMessageRequest request)
+        {
+            var messageToUpdate = await _dbContext.Messages.FindAsync(id);
+
+            if (messageToUpdate == null)
+            {
+                return NotFound($"Message with ID {id} was not found.");
+            }
+
+            messageToUpdate.Text = request.Text;
+
+            await _dbContext.SaveChangesAsync();
+
+            return Ok(messageToUpdate);
+        }
+
         [HttpGet]
         public async Task<IActionResult> GetAllMessages()
         {
