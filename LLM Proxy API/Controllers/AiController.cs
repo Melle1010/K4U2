@@ -35,25 +35,28 @@ public class AiController : ControllerBase
     {
         _ollama.SelectedModel = "gemma3:4b";
         string fullResponse = "";
+        var client = _httpClientFactory.CreateClient("ContentApiClient");
+
+        await client.PostAsJsonAsync("api/messages/create-message", new { Text = prompt});
 
         await foreach (var stream in _ollama.GenerateAsync(prompt))
         {
             fullResponse += stream.Response;
         }
 
-        var client = _httpClientFactory.CreateClient("ContentApiClient");
+        
 
         var contentRequest = new { Text = fullResponse };
 
-        var response = await client.PostAsJsonAsync("api/messages", contentRequest);
+        var response = await client.PostAsJsonAsync("api/messages/create-message", contentRequest);
 
         if (response.IsSuccessStatusCode)
         {
-            var savedMessage = await response.Content.ReadFromJsonAsync<object>();
+            
             return Ok(new
             {
                 Status = "Saved to Content API",
-                Data = savedMessage
+                Data = contentRequest.Text
             });
         }
 

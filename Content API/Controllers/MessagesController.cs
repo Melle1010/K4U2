@@ -12,12 +12,27 @@ namespace Content_API.Controllers{
     public class MessagesController : ControllerBase
     {
         private readonly AppDbContext _dbContext;
-        public MessagesController(AppDbContext dbContext)
+        private readonly IHttpClientFactory _httpClientFactory;
+        public MessagesController(AppDbContext dbContext, IHttpClientFactory httpClientFactory)
         {
             _dbContext = dbContext;
+            _httpClientFactory = httpClientFactory;
         }
 
-        [HttpPost]
+        [HttpPost("send-a-prompt-to-ai-model")]
+        public async Task<IActionResult> SendPromptToAi([FromBody] string prompt)
+        {
+
+            var client = _httpClientFactory.CreateClient("LLM_Proxy_Client");
+            client.BaseAddress = new Uri("http://localhost:5118/");
+
+            var response = await client.PostAsJsonAsync("api/ai/ask-and-save", prompt);
+
+            string aiResponse = $"AI response to: {prompt}\n- - - - - - - -\n{response}";
+            return Ok(aiResponse);
+        }
+
+        [HttpPost("create-message")]
         public async Task<IActionResult> CreateMessage(CreateMessageRequest request)
         {
             Message message = new Message();
