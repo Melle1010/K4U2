@@ -63,10 +63,29 @@ namespace Content_API.Controllers{
         }
 
         [HttpGet]
-        public async Task<IActionResult> GetAllMessages()
+        public async Task<IActionResult> GetAllMessages(
+    [FromQuery] DateTime? startDate,
+    [FromQuery] string? sort = "asc")
         {
-            List<Message> messages = await _dbContext.Set<Message>().ToListAsync();
-            return Ok(messages);
+            IQueryable<Message> query = _dbContext.Messages;
+
+            if (startDate.HasValue)
+            {
+                query = query.Where(m => m.CreatedAt >= startDate.Value);
+            }
+
+            if (sort.ToLower() == "desc")
+            {
+                query = query.OrderByDescending(m => m.CreatedAt);
+            }
+            else
+            {
+                query = query.OrderBy(m => m.CreatedAt);
+            }
+
+            var result = await query.ToListAsync();
+
+            return Ok(result);
         }
     }
 }
