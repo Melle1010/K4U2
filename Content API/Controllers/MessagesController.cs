@@ -20,11 +20,12 @@ namespace Content_API.Controllers{
         }
 
         [HttpPost("send-a-prompt-to-ai-model")]
-        public async Task<IActionResult> SendPromptToAi([FromBody] string prompt)
+        public async Task<IActionResult> SendPromptToAi([FromBody] string prompt, [FromServices] IConfiguration configuration)
         {
 
             var client = _httpClientFactory.CreateClient("LLM_Proxy_Client");
             client.BaseAddress = new Uri("http://localhost:5118/");
+            client.DefaultRequestHeaders.Add("X-API-KEY", configuration["ApiKey"]);
 
             var response = await client.PostAsJsonAsync("api/ai/ask-and-save", prompt);
 

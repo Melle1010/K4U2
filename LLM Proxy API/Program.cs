@@ -1,10 +1,11 @@
+using LLM_Proxy_API.Middlewares;
 using OllamaSharp;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
 
 var ollamaUrl = new Uri("https://ollama.com");
-var apiKey = "19757ca89b814494a2cae5d8d5d73396.5CUICh0wG7gnVM7G98cMmOxj";
+var apiKey = builder.Configuration["OllamaApiKey"] ?? throw new Exception("Ollama API key is not configured.");
 
 builder.Services.AddScoped<IOllamaApiClient>(sp =>
 {
@@ -33,7 +34,11 @@ app.UseSwaggerUI();
 
 app.UseHttpsRedirection();
 
+app.UseMiddleware<ApiKeyMiddleware>();
+
 app.UseAuthorization();
+
+
 
 app.MapControllers();
 

@@ -5,6 +5,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <RootNamespace>LLM_Proxy_API</RootNamespace>
+    <UserSecretsId>e8aa7633-3662-4dff-85b8-498a6d6842e5</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
