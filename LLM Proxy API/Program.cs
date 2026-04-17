@@ -1,5 +1,6 @@
 using LLM_Proxy_API.Middlewares;
 using OllamaSharp;
+using Scalar.AspNetCore;
 using System.Net.Http.Headers;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -22,15 +23,17 @@ builder.Services.AddHttpClient("ContentApiClient", client =>
 
 builder.Services.AddControllers();
 
-builder.Services.AddSwaggerGen();
+builder.Services.AddOpenApi();
 
 
 
 var app = builder.Build();
 
-app.UseSwagger();
-
-app.UseSwaggerUI();
+if (app.Environment.IsDevelopment())
+{
+    app.MapOpenApi();
+    app.MapScalarApiReference();
+}
 
 app.UseHttpsRedirection();
 
