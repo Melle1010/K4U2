@@ -1,5 +1,6 @@
 ﻿using Content_API.Data;
 using Content_API.DTOs;
+using Content_API.Exceptions;
 using Content_API.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
@@ -27,7 +28,14 @@ namespace Content_API.Controllers{
             client.BaseAddress = new Uri("http://localhost:5118/");
             client.DefaultRequestHeaders.Add("X-API-KEY", configuration["ApiKey"]);
 
+            if (string.IsNullOrEmpty(prompt)) throw new ValidationException("Prompt cannot be empty");
+
             var response = await client.PostAsJsonAsync("api/ai/ask-and-save", prompt);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                throw new Exception("LLM Proxy API svarade med felkod.");
+            }
 
             string aiResponse = $"AI response to: {prompt}\n- - - - - - - -\n{response}";
             return Ok(aiResponse);
@@ -46,7 +54,7 @@ namespace Content_API.Controllers{
         }
 
         [HttpPut("{id}")]
-        public async Task<IActionResult> UpdateMessage(int id, UpdateMessageRequest request)
+        public async Task<IActionResult> UpdateMessage(Guid id, UpdateMessageRequest request)
         {
             var messageToUpdate = await _dbContext.Messages.FindAsync(id);
 
@@ -62,6 +70,29 @@ namespace Content_API.Controllers{
             return Ok(messageToUpdate);
         }
 
+       
+        [HttpDelete("{id}")]
+        public async Task<IActionResult> DeleteMessage(int id)
+        {
+            var messageToDelete = await _dbContext.Messages.FindAsync(id);
+
+            if (messageToDelete == null)
+            {
+                return NotFound($"Message with ID {id} was not found.");
+            }
+
+            _dbContext.Messages.Remove(messageToDelete);
+            await _dbContext.SaveChangesAsync();
+
+            return NoContent();
+        }
+
+        /// <summary>
+        /// Hämtar alla meddelanden med möjlighet att filtrera på datum och sortering.
+        /// </summary>
+        /// <param name="startDate">Startdatum för filtrering.</param>
+        /// <param name="sort">Sorteringsordning (asc/desc).</param>
+        /// <returns>En lista över meddelanden.</returns>
         [HttpGet]
         public async Task<IActionResult> GetAllMessages(
     [FromQuery] DateTime? startDate,

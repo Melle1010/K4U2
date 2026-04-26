@@ -1,4 +1,5 @@
 using Content_API.Data;
+using Content_API.Middlewares;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.InMemory;
 using Scalar.AspNetCore;
@@ -18,7 +19,9 @@ builder.Services.AddOpenApi();
 
 var app = builder.Build();
 
-if(app.Environment.IsDevelopment())
+app.UseMiddleware<ExceptionMiddleware>();
+
+if (app.Environment.IsDevelopment())
 {
     app.MapOpenApi();
     app.MapScalarApiReference();
