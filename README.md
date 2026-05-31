@@ -101,17 +101,7 @@ dotnet --version
 
 ### 4. Set Up Ollama (Required for LLM Proxy API)
 
-```powershell
-# Download and install Ollama from https://ollama.ai
-# Then pull a model (examples):
-
-ollama pull gemma2:7b    # Recommended (faster)
-ollama pull gemma3:4b    # Currently hardcoded in AiController
-ollama pull llama2:7b    # Alternative
-
-# Start Ollama service
-ollama serve             # On Windows, Ollama runs as system service by default
-```
+Get an API Key from ollama website by making an account.
 
 **Note:** By default, Ollama listens on `http://localhost:11434`. The project uses `https://ollama.com` as configured URI (ensure this is correct in your environment).
 
