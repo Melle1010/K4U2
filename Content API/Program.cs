@@ -1,7 +1,6 @@
 using Content_API.Data;
 using Content_API.Middlewares;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.EntityFrameworkCore.InMemory;
 using Scalar.AspNetCore;
 
 var builder = WebApplication.CreateBuilder(args);
@@ -9,6 +8,12 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.AddDbContext<AppDbContext>(options => options.UseInMemoryDatabase("MyDatabase"));
 
 builder.Services.AddHttpClient();
+builder.Services.AddHttpClient("LLM_Proxy_Client", client =>
+{
+    var configuration = builder.Configuration;
+    var baseUrl = configuration["LlmProxy:BaseUrl"] ?? "http://localhost:5118/";
+    client.BaseAddress = new Uri(baseUrl);
+});
 
 builder.Services.AddControllers();
 

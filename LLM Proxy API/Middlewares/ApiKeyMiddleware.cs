@@ -14,19 +14,27 @@
         public async Task InvokeAsync(HttpContext context)
         {
 
-            var VALID_API_KEY = context.RequestServices.GetRequiredService<IConfiguration>()["ApiKey"];
+            var config = context.RequestServices.GetRequiredService<IConfiguration>();
+            var VALID_API_KEY = config["ApiKey"];
+
+            if (string.IsNullOrWhiteSpace(VALID_API_KEY))
+            {
+                context.Response.StatusCode = StatusCodes.Status503ServiceUnavailable;
+                await context.Response.WriteAsync("API key configuration is missing.");
+                return;
+            }
             
             if (!context.Request.Headers.TryGetValue(APIKEYNAME, out var extractedApiKey))
             {
-                context.Response.StatusCode = 401;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("API-nyckel saknas.");
                 return;
             }
 
             
-            if (!VALID_API_KEY.Equals(extractedApiKey))
+            if (!string.Equals(VALID_API_KEY, extractedApiKey, StringComparison.Ordinal))
             {
-                context.Response.StatusCode = 401;
+                context.Response.StatusCode = StatusCodes.Status401Unauthorized;
                 await context.Response.WriteAsync("Ogiltig API-nyckel.");
                 return; // Avbryter även här
             }
