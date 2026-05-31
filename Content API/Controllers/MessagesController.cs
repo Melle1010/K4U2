@@ -4,6 +4,7 @@ using Content_API.Exceptions;
 using Content_API.Models;
 using Microsoft.AspNetCore.Http.HttpResults;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 using Microsoft.EntityFrameworkCore;
 
 namespace Content_API.Controllers{ 
@@ -14,30 +15,49 @@ namespace Content_API.Controllers{
     {
         private readonly AppDbContext _dbContext;
         private readonly IHttpClientFactory _httpClientFactory;
-        public MessagesController(AppDbContext dbContext, IHttpClientFactory httpClientFactory)
+        private readonly ILogger<MessagesController> _logger;
+
+        public MessagesController(AppDbContext dbContext, IHttpClientFactory httpClientFactory, ILogger<MessagesController> logger)
         {
             _dbContext = dbContext;
             _httpClientFactory = httpClientFactory;
+            _logger = logger;
         }
 
         [HttpPost("send-a-prompt-to-ai-model")]
         public async Task<IActionResult> SendPromptToAi([FromBody] string prompt, [FromServices] IConfiguration configuration)
         {
-
             var client = _httpClientFactory.CreateClient("LLM_Proxy_Client");
             client.BaseAddress = new Uri("http://localhost:5118/");
             client.DefaultRequestHeaders.Add("X-API-KEY", configuration["ApiKey"]);
 
-            if (string.IsNullOrEmpty(prompt)) throw new ValidationException("Prompt cannot be empty");
+            if (string.IsNullOrWhiteSpace(prompt))
+            {
+                throw new ValidationException("Prompt cannot be empty.");
+            }
 
-            var response = await client.PostAsJsonAsync("api/ai/ask-and-save", prompt);
+            HttpResponseMessage response;
+
+            try
+            {
+                _logger.LogInformation("Sending prompt to LLM Proxy API at {Url}", client.BaseAddress);
+                response = await client.PostAsJsonAsync("api/ai/ask-and-save", prompt);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Error while calling LLM Proxy API.");
+                throw new Exception("Failed to call LLM Proxy API.", ex);
+            }
 
             if (!response.IsSuccessStatusCode)
             {
-                throw new Exception("LLM Proxy API svarade med felkod.");
+                var errorBody = await response.Content.ReadAsStringAsync();
+                _logger.LogError("LLM Proxy API returned non-success status code {StatusCode}. Body: {Body}", response.StatusCode, errorBody);
+                throw new Exception($"LLM Proxy API responded with error code {(int)response.StatusCode}.");
             }
 
-            string aiResponse = $"AI response to: {prompt}\n- - - - - - - -\n{response}";
+            var content = await response.Content.ReadAsStringAsync();
+            var aiResponse = $"AI response to: {prompt}\n- - - - - - - -\n{content}";
             return Ok(aiResponse);
         }
 

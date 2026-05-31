@@ -1,7 +1,7 @@
-using LLM_Proxy_API.Middlewares;
 using OllamaSharp;
 using Scalar.AspNetCore;
 using System.Net.Http.Headers;
+using LLM_Proxy_API.Middlewares;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -28,6 +28,8 @@ builder.Services.AddOpenApi();
 
 
 var app = builder.Build();
+
+app.UseMiddleware<ExceptionMiddleware>();
 
 if (app.Environment.IsDevelopment())
 {
