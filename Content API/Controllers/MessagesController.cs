@@ -58,7 +58,7 @@ namespace Content_API.Controllers{
 
             var content = await response.Content.ReadAsStringAsync();
             var aiResponse = $"AI response to: {prompt}\n- - - - - - - -\n{content}";
-            return Ok(aiResponse);
+            return Ok(new {reply = aiResponse});
         }
 
         [HttpPost("create-message")]
